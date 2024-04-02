@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model User {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?    @unique
+  emailVerified DateTime?
+  phone         String?    @unique
+  phoneVerified DateTime?
+  password      String?
+  image         String?
+  address       String?
+  role          Role       @default(user)
+  account       Account[]
+  reviews       Review[]
+  wishlist      Wishlist[]
+  cartList      CartList[]
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+}
+
+model Category {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  subcategory Subcategory[]
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+}
+
+model Subcategory {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  icon        String
+  products    Product[]
+  category_id String    @db.ObjectId
+  by_category Category  @relation(fields: [category_id], references: [id])
+  arrival     Arrival[]
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+}
+
+model Product {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  regularPrice    Int
+  discountPercent Int         @default(0)
+  rating          Float       @default(0)
+  totalReview     Int         @default(0)
+  totalStock      Int
+  brands          String?
+  images          String[]
+  subcategory_id  String      @db.ObjectId
+  by_subcategory  Subcategory @relation(fields: [subcategory_id], references: [id])
+  totalSales      Int         @default(0)
+  status          Status      @default(inactive)
+  sku             String      @unique
+  reviews         Review[]
+  typeOfSales     Sales       @default(regular)
+  deliveryFee     Int         @default(0)
+  cartList        CartList[]
+  wishlist        Wishlist[]
+  colors          String[]
+  sizes           String[]
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum Sales {
+  regular
+  flash_sale
+  popular
+  best_sale
+}
+
+enum Status {
+  active
+  inactive
+}
+
+model Review {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id      String   @db.ObjectId
+  user         User     @relation(fields: [user_id], references: [id])
+  product_id   String   @db.ObjectId
+  product      Product  @relation(fields: [product_id], references: [id])
+  total_rating Int
+  comments     String?
+  images       String[]
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model Arrival {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  image          String
+  status         Status      @default(active)
+  description    String
+  subcategory_id String      @db.ObjectId
+  subcategory    Subcategory @relation(fields: [subcategory_id], references: [id])
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+}
+
+model CartList {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  product_id String   @db.ObjectId
+  product    Product  @relation(fields: [product_id], references: [id])
+  quantity   Int      @default(1)
+  color      String?
+  size       String?
+  user_id    String   @db.ObjectId
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Wishlist {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  product_id String   @db.ObjectId
+  product    Product  @relation(fields: [product_id], references: [id])
+  user_id    String   @db.ObjectId
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Carousel {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  image      String
+  status     Status   @default(active)
+  pathname   String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
